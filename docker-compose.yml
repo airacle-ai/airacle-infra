@@ -10,6 +10,7 @@
 ## ─────────────────────────────────────────────────────
 
 x-airacle-base: &airacle-base
+  build: .                    # Dockerfile 在根目录，docker-compose build 直接可用
   image: airacle-dev:latest
   stdin_open: true
   tty: true

@@ -20,14 +20,14 @@
 ```
 airacle-infra/
 ├── README.md                       ← 你正在看的
-├── airacle-dev/
-│   └── Dockerfile                  ← 基础镜像源（Claude/Codex/Omnara 都在这里）
-└── airacle/
-    ├── docker-compose.yml          ← 项目容器编排
-    ├── add-project.sh              ← 一键加项目脚本
-    ├── .env.example
-    ├── docs/                       ← 维护文档（必读）
-    │   ├── 01-architecture.md          整体架构
+├── CONTEXT.md                      ← AI agent 交接文档（含完整上下文）
+├── Dockerfile                      ← 基础镜像源（Claude/Codex/Omnara 都在这里）
+├── entrypoint.sh                   ← 容器启动脚本（Omnara daemon + watchdog）
+├── docker-compose.yml              ← 项目容器编排
+├── add-project.sh                  ← 一键加项目脚本
+├── .env.example                    ← Key 模板
+├── docs/                           ← 维护文档（必读）
+│   ├── 01-architecture.md              整体架构
     │   ├── 02-what-persists.md     ★ 什么会丢/什么不会
     │   ├── 03-update-playbook.md       升级/加工具操作手册
     │   ├── 04-troubleshooting.md       故障排查
