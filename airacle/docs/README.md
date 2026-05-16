@@ -19,6 +19,9 @@
 2. [04-troubleshooting.md](./04-troubleshooting.md) — 故障排查
 3. [08-lessons-learned.md](./08-lessons-learned.md) — **★ 必读** 踩坑实录
 
+### 🗂️ Omnara Workspace 管理
+1. [09-omnara-workspace-setup.md](./09-omnara-workspace-setup.md) — 批量将子目录注册为独立 Workspace
+
 ## 文档总览
 
 | 文档 | 内容 |
@@ -31,6 +34,7 @@
 | [06-login-procedures.md](./06-login-procedures.md) | Claude Code + Omnara 登录的正确姿势 |
 | [07-onboarding-new-machine.md](./07-onboarding-new-machine.md) | 新机器 10 分钟开通 + 批量部署思路 |
 | [08-lessons-learned.md](./08-lessons-learned.md) | 8 个踩过的坑与正解，好镜像 checklist |
+| [09-omnara-workspace-setup.md](./09-omnara-workspace-setup.md) | 批量将本地子目录注册为 Omnara Workspace 的原理与脚本 |
 
 ## 一句话总结
 
