@@ -25,6 +25,7 @@ x-airacle-base: &airacle-base
     # GPU 相关（nvidia-container-runtime 会读这两个变量）
     - NVIDIA_VISIBLE_DEVICES=all
     - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    # ↑ API Keys 不在这里 —— 全部从各项目的 env_file 注入
 
 services:
 
