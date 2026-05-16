@@ -1,0 +1,44 @@
+## ─────────────────────────────────────────────────────
+##  airacle 多项目开发环境
+##
+##  设计原则:
+##    - 二进制共享: 所有容器 FROM airacle-dev:latest（同一镜像层）
+##    - 会话隔离:   每个项目自己的 .claude/ .omnara/ workspace/
+##    - 团队共享:   shared/ 只读挂载，所有人读同一份团队配置
+##
+##  新增项目: 复制一份 service 块，改 container_name 和路径即可
+## ─────────────────────────────────────────────────────
+
+x-airacle-base: &airacle-base
+  image: airacle-dev:latest
+  stdin_open: true
+  tty: true
+  network_mode: host
+  restart: unless-stopped
+  environment:
+    - IS_SANDBOX=1
+    - LANG=en_US.UTF-8
+    - TZ=Asia/Shanghai
+
+services:
+
+  # ─── airacle-dev（首个测试容器） ─────────────────────
+  airacle-dev:
+    <<: *airacle-base
+    container_name: airacle-dev
+    hostname: airacle-dev
+    env_file: projects/airacle-dev/.env
+    volumes:
+      # 团队共享配置（只读，所有项目共用一份）
+      - ./shared/claude-settings:/shared/claude-settings:ro
+
+      # 该项目独立的工具状态（完全隔离）
+      - ./projects/airacle-dev/.claude:/root/.claude
+      - ./projects/airacle-dev/.omnara:/root/.omnara
+
+      # 工作区
+      - ./projects/airacle-dev/workspace:/workspace
+
+      # Git / SSH (只读)
+      - ~/.gitconfig:/root/.gitconfig:ro
+      - ~/.ssh:/root/.ssh:ro
