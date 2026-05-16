@@ -70,8 +70,13 @@ RUN echo '\n# ── airacle-dev env ──'     >> /root/.bashrc \
 # ── Workspace ────────────────────────────────
 WORKDIR /workspace
 
+# ── Entrypoint: auto-start Omnara daemon if logged in ──
+COPY entrypoint.sh /usr/local/bin/airacle-entrypoint.sh
+RUN chmod +x /usr/local/bin/airacle-entrypoint.sh
+
 # ── Healthcheck: verify all tools present ────
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
     CMD claude --version && codex --version && omnara --version || exit 1
 
+ENTRYPOINT ["/usr/local/bin/airacle-entrypoint.sh"]
 CMD ["/bin/bash"]
