@@ -15,10 +15,16 @@ x-airacle-base: &airacle-base
   tty: true
   network_mode: host
   restart: unless-stopped
+  # ── GPU 透传（docker-compose v1 方式）──────────────────
+  # deploy.resources 是 swarm 语法，v1 不支持；这里用 runtime
+  runtime: nvidia
   environment:
     - IS_SANDBOX=1
     - LANG=en_US.UTF-8
     - TZ=Asia/Shanghai
+    # GPU 相关（nvidia-container-runtime 会读这两个变量）
+    - NVIDIA_VISIBLE_DEVICES=all
+    - NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
 services:
 
