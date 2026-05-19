@@ -3,25 +3,48 @@
 #  airacle-dev 容器启动入口
 #
 #  作用：
-#  1. 容器启动/重启时自动恢复 Omnara daemon
-#  2. 后台 watchdog 每 30 秒检查，崩了自动重启
-#     这样 dashboard 上的机器永远在线
+#  1. Bootstrap Omnara 二进制到 bind-mount 目录
+#     （让自动更新机制正常工作，不卡死在旧版）
+#  2. 容器启动/重启时自动恢复 Omnara daemon
+#  3. 后台 watchdog 每 60 秒检查，崩了自动重启
+#
+#  设计原则：
+#  - /opt/omnara/omnara      = 镜像内 bootstrap 版（只用于首次初始化）
+#  - ~/.omnara/bin/omnara    = 工作版（bind mount 持久化，自动更新落在这里）
+#  - /usr/local/bin/omnara   = symlink 始终指向工作版
 # ─────────────────────────────────────────────
 
+OMNARA_WORK=/root/.omnara/bin/omnara
+OMNARA_BOOT=/opt/omnara/omnara
+
+# ── Step 1: 确保工作目录里有最新二进制 ──────────
+if [ ! -f "$OMNARA_WORK" ]; then
+    echo "[airacle-dev] First boot: bootstrapping Omnara from image..."
+    mkdir -p /root/.omnara/bin
+    cp "$OMNARA_BOOT" "$OMNARA_WORK"
+    chmod +x "$OMNARA_WORK"
+fi
+
+# ── Step 2: symlink 始终指向工作版（自动更新后也有效）─
+ln -sf "$OMNARA_WORK" /usr/local/bin/omnara
+
+OMNARA_VER=$("$OMNARA_WORK" --version 2>/dev/null || echo "unknown")
+echo "[airacle-dev] Omnara version: $OMNARA_VER"
+
+# ── Step 3: 起 daemon（如已登录）────────────────
 start_omnara_daemon() {
-    omnara daemon start --no-wait 2>&1 | sed 's/^/[airacle-dev] /' || true
+    "$OMNARA_WORK" daemon start --no-wait 2>&1 | sed 's/^/[airacle-dev] /' || true
 }
 
-# ── 初次启动 ──────────────────────────────────
 if [ -f /root/.omnara/creds.json ]; then
     echo "[airacle-dev] Logged into Omnara. Starting daemon..."
     start_omnara_daemon
 
-    # ── 后台 watchdog：每 30 秒保活 ─────────────
+    # ── Step 4: watchdog 每 60 秒保活 ───────────
     (
         while true; do
-            sleep 30
-            if ! omnara daemon status >/dev/null 2>&1; then
+            sleep 60
+            if ! "$OMNARA_WORK" daemon status >/dev/null 2>&1; then
                 echo "[airacle-dev] 🔄 Omnara daemon down, restarting..."
                 start_omnara_daemon
             fi
