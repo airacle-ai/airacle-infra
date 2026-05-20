@@ -10,7 +10,6 @@
 ## ─────────────────────────────────────────────────────
 
 x-airacle-base: &airacle-base
-  build: .                    # Dockerfile 在根目录，docker-compose build 直接可用
   image: airacle-dev:latest
   stdin_open: true
   tty: true
@@ -34,7 +33,7 @@ services:
   airacle-dev:
     <<: *airacle-base
     container_name: airacle-dev
-    hostname: airacle-dev
+    hostname: airacle-slowpc
     env_file: projects/airacle-dev/.env
     volumes:
       # 团队共享配置（只读，所有项目共用一份）
