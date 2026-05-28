@@ -27,6 +27,14 @@ docker exec -it airacle-dev claude auth login --claudeai
 会让你输入 key 而不是浏览器登录。如果你只有 Claude Pro 订阅没 Console API key，
 就会卡住。
 
+### ❌ 更隐蔽的坑：`.env` 里留着 `ANTHROPIC_API_KEY` 占位符
+
+即使你 OAuth 登录成功了，只要 `.env` 里有 `ANTHROPIC_API_KEY=sk-ant-xxxxxxxx`（占位符），
+Claude 启动就会优先用这个假 key → 报 `Invalid API key`。
+
+**正解**：`.env` 里把 `ANTHROPIC_API_KEY=` 留空（注意 `=` 后面什么都不写）。
+详见 [08-lessons-learned.md 坑 11](./08-lessons-learned.md)。
+
 ### 登录成功的证据
 
 ```bash
@@ -126,6 +134,61 @@ docker exec -it airacle-dev tmux attach -t claude-work
 ```
 
 这就是 Omnara 自家的"headless mode"想解决的问题，但 tmux 是更通用的方案。
+
+---
+
+## Omnara 启动正确性 Checklist（每次部署都跑一遍）
+
+新机器、镜像 rebuild、compose 改动……任何可能影响 Omnara 的操作之后，
+按这个 checklist 跑一遍就能确认整套链路真的通了。
+
+```bash
+CT=airacle-dev   # 容器名，按需替换
+
+# ✅ 1. 容器健康
+docker ps --filter "name=^${CT}$" --format "{{.Status}}"
+#   期望: Up X (healthy)
+
+# ✅ 2. hostname 正确（= Omnara Dashboard 上的机器名）
+[ "$(docker exec $CT hostname)" = "$CT" ] && echo OK || echo "FAIL: hostname mismatch"
+
+# ✅ 3. /opt/omnara/omnara 不会触发自更新（核心防护）
+docker exec $CT /opt/omnara/omnara --version 2>&1 | head -1
+#   期望: 直接打印版本号（如 "0.25.12"）
+#   失败: 出现 "Updating Omnara CLI..." → 坑 8 复发，立刻 cp 同步
+
+# ✅ 4. /usr/local/bin/omnara symlink 指向工作版
+docker exec $CT readlink -f /usr/local/bin/omnara
+#   期望: /root/.omnara/bin/omnara
+
+# ✅ 5. PATH 顺序正确（/usr/local/bin 在 /opt/omnara 之前）
+docker exec $CT bash -c 'which omnara'
+#   期望: /usr/local/bin/omnara（不是 /opt/omnara/omnara）
+
+# ✅ 6. 登录凭证存在 + 在 volume 里（重建容器不丢）
+docker exec $CT ls -la /root/.omnara/creds.json
+#   期望: 文件存在
+docker volume inspect airacle-${CT}-omnara-config --format '{{.Mountpoint}}' \
+  | xargs -I {} docker run --rm -v {}:/d alpine ls /d/creds.json
+#   期望: 也能在 volume 里看到（如果用的是 named volume；bind mount 直接 ls 宿主机路径）
+
+# ✅ 7. Daemon 跑得稳（关键：等 90s 看 PID 是否还在）
+PID1=$(docker exec $CT /root/.omnara/bin/omnara daemon status 2>/dev/null | awk '/PID/{print $2}')
+sleep 90
+PID2=$(docker exec $CT /root/.omnara/bin/omnara daemon status 2>/dev/null | awk '/PID/{print $2}')
+[ -n "$PID1" ] && [ "$PID1" = "$PID2" ] && echo "OK (PID $PID1 stable)" \
+  || echo "FAIL: daemon restarting (PID drift $PID1 -> $PID2)"
+
+# ✅ 8. 后端注册的机器名 = hostname
+docker exec $CT bash -c \
+  "ls -t /root/.omnara/logs/daemon/ | head -1 | xargs -I {} grep 'Registered machine' /root/.omnara/logs/daemon/{}"
+#   期望: Registered machine $CT (UUID) with backend
+
+# ✅ 9. 浏览器确认: 打开 https://omnara.com → 机器列表里 $CT 是绿点
+```
+
+**自动化版本**：把上面 9 步写成一个脚本扔在 `scripts/verify-omnara.sh`，
+新机器开通 / 每次 rebuild 之后都跑一遍。任何一步 FAIL 就对照 `04-troubleshooting.md` 排查。
 
 ---
 

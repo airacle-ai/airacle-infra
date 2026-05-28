@@ -31,21 +31,52 @@ cd ..
 
 > 如果用 docker-compose v2 (`docker compose`)：`docker compose build`
 
-## Step 3: 准备首个项目
+## Step 3: 设置中央 secrets 文件（**新机器必做**）
+
+所有 API key（GITHUB / CLOUDFLARE / OPENAI 等）走中央 secrets 文件，
+所有项目容器共享一份，git 永远碰不到。
 
 ```bash
-cd airacle
+mkdir -p ~/.airacle && chmod 700 ~/.airacle
+cat > ~/.airacle/secrets.env <<'EOF'
+# ─────────────────────────────────────
+# Airacle 中央 secrets
+# - 只放 API keys 类的密钥
+# - 留空 = 该 key 不存在（OK），不要写占位符 sk-xxx（会触发坑 11）
+# ─────────────────────────────────────
+OPENAI_API_KEY=
+GITHUB_TOKEN=
+GH_TOKEN=
+CF_API_TOKEN=
+CLOUDFLARE_API_TOKEN=
+# 按需补充：VERCEL_TOKEN=、SUPABASE_*=、AWS_*=…
+EOF
+chmod 600 ~/.airacle/secrets.env
+# 然后用你喜欢的编辑器填入真实值
+```
+
+> **从已有机器迁移**：如果旧机器的 key 散在 `~/.bashrc` 里：
+> ```bash
+> grep -E "^export (OPENAI_API_KEY|GITHUB_TOKEN|GH_TOKEN|CF_API_TOKEN|CLOUDFLARE_API_TOKEN)=" \
+>   ~/.bashrc | sed 's/^export //' > ~/.airacle/secrets.env
+> chmod 600 ~/.airacle/secrets.env
+> ```
+
+## Step 4: 准备首个项目
+
+```bash
 PROJECT_NAME=airacle-dev   # 改成你想要的名字
 
 mkdir -p projects/$PROJECT_NAME/{.claude,.omnara,workspace}
+touch projects/$PROJECT_NAME/.claude.json   # Claude Code 需要这个文件挂载点
 cp .env.example projects/$PROJECT_NAME/.env
-# 如有 API Key 编辑 .env 填入（也可空着，进容器走浏览器登录）
+# 项目专属的非密参数（如 CLAUDE_MODEL）填这里；API key 由 ~/.airacle/secrets.env 注入
 ```
 
 `docker-compose.yml` 默认有 `airacle-dev` 这个 service，
 如果你用了别的名字，复制并改名即可（或者用 `./add-project.sh <name>`）。
 
-## Step 4: 启动容器
+## Step 5: 启动容器
 
 ```bash
 docker-compose up -d            # v1
@@ -59,7 +90,7 @@ docker ps --filter "name=airacle"
 # 应看到 airacle-dev (或你的项目名) Up and healthy
 ```
 
-## Step 5: 登录工具（一次性，登好就持久化）
+## Step 6: 登录工具（一次性，登好就持久化）
 
 ```bash
 # 推荐先开 tmux 防 SSH 断
@@ -74,7 +105,7 @@ docker exec -it airacle-dev omnara auth login
 # 浏览器授权 + fallback code，详见 06-login-procedures.md
 ```
 
-## Step 6: 验证全链路
+## Step 7: 验证全链路
 
 ```bash
 # 容器里跑：
@@ -87,7 +118,7 @@ docker exec airacle-dev bash -c "
 
 打开 https://omnara.com，应该能看到这台机器的容器名出现在下拉列表里。
 
-## Step 7: 重启验证持久性（推荐做一次）
+## Step 8: 重启验证持久性（推荐做一次）
 
 ```bash
 docker rm -f airacle-dev

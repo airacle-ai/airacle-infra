@@ -30,7 +30,8 @@
 | [05-decisions.md](./05-decisions.md) | 设计决策记录（D1-D8） |
 | [06-login-procedures.md](./06-login-procedures.md) | Claude Code + Omnara 登录的正确姿势 |
 | [07-onboarding-new-machine.md](./07-onboarding-new-machine.md) | 新机器 10 分钟开通 + 批量部署思路 |
-| [08-lessons-learned.md](./08-lessons-learned.md) | 8 个踩过的坑与正解，好镜像 checklist |
+| [08-lessons-learned.md](./08-lessons-learned.md) | 14 个踩过的坑与正解（**坑 8/9/10 = Omnara；坑 11/12 = Claude Code；坑 14 = env_file 覆盖陷阱**） |
+| [09-preinstalled-env.md](./09-preinstalled-env.md) | **镜像预装清单**：能用什么 CLI / 库、API key 怎么注入 |
 
 ## 一句话总结
 

@@ -26,6 +26,19 @@ fi
 # ── Step 2: symlink 始终指向工作版 ────────────
 ln -sf "$OMNARA_WORK" /usr/local/bin/omnara
 
+# ── Step 2.5: 把 bootstrap 版本同步到工作版 ────
+# 防御性深度防护：万一哪天 PATH 顺序又把 /opt/omnara 放回前面，
+# 或者有人直接调 /opt/omnara/omnara，至少不会再触发自更新循环。
+# 详见 docs/08-lessons-learned.md 坑 8。
+if [ -f "$OMNARA_WORK" ] && [ -f "$OMNARA_BOOT" ]; then
+    if ! cmp -s "$OMNARA_WORK" "$OMNARA_BOOT"; then
+        echo "[airacle] Syncing /opt/omnara/* with working version (avoid stale boot binary)..."
+        cp -f /root/.omnara/bin/omnara         /opt/omnara/omnara         2>/dev/null || true
+        cp -f /root/.omnara/bin/omnara-claude  /opt/omnara/omnara-claude  2>/dev/null || true
+        cp -f /root/.omnara/bin/omnara-codex   /opt/omnara/omnara-codex   2>/dev/null || true
+    fi
+fi
+
 OMNARA_VER=$("$OMNARA_WORK" --version 2>/dev/null | grep -v Updating | tail -1 || echo "unknown")
 echo "[airacle] Omnara: $OMNARA_VER"
 

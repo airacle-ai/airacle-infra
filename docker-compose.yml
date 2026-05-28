@@ -33,14 +33,24 @@ services:
   airacle-dev:
     <<: *airacle-base
     container_name: airacle-dev
-    hostname: airacle-slowpc
-    env_file: projects/airacle-dev/.env
+    # ⚠️ hostname 必须 = container_name —— Omnara 用它作为 Dashboard 上的机器名
+    #    详见 docs/08-lessons-learned.md 坑 9
+    hostname: airacle-dev
+    # 加载顺序：后者覆盖前者
+    #   1. ~/.airacle/secrets.env       = 中央 API keys（所有项目共享，git 永远碰不到）
+    #   2. projects/airacle-dev/.env    = 本项目特定的非密参数
+    env_file:
+      - ~/.airacle/secrets.env
+      - projects/airacle-dev/.env
     volumes:
       # 团队共享配置（只读，所有项目共用一份）
       - ./shared/claude-settings:/shared/claude-settings:ro
 
       # 该项目独立的工具状态（完全隔离）
       - ./projects/airacle-dev/.claude:/root/.claude
+      # ⚠️ Claude Code 还会写一个 /root/.claude.json（文件，不在 .claude/ 文件夹下）
+      #    必须单独挂出来，否则重建容器会丢；详见 docs/04-troubleshooting.md Q10
+      - ./projects/airacle-dev/.claude.json:/root/.claude.json
       - ./projects/airacle-dev/.omnara:/root/.omnara
 
       # 工作区
