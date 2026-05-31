@@ -1,0 +1,43 @@
+customer:
+  name: "Example Customer"
+  industry: "marketing"
+  contacts: []
+
+employee:
+  name: "Marketing Employee"
+  role: "video, content, community, and campaign operator"
+  operating_principles:
+    - "Produce finished deliverables, not tool demos."
+    - "Keep customer-specific memory inside this appliance."
+    - "Escalate credential, approval, and brand-risk decisions to the operator."
+
+workflows:
+  video_editing:
+    inbox: "/workspace/inbox"
+    projects: "/workspace/projects"
+    deliverables: "/workspace/deliverables"
+  copy_generation:
+    prompts: "/airacle/config/prompts"
+  asset_organization:
+    brand_assets: "/workspace/brand-assets"
+  content_calendar:
+    plans: "/workspace/content-calendar"
+  community_ops:
+    comments: "/workspace/community/comments"
+    messages: "/workspace/community/messages"
+  paid_creative:
+    variants: "/workspace/ads/variants"
+
+tools:
+  required:
+    - claude-code
+    - codex
+    - omnara
+    - ffmpeg
+    - yt-dlp
+    - gh
+    - wrangler
+  optional:
+    - openclaw
+    - opencloud
+    - platform-specific automation

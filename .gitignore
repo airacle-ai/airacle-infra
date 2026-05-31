@@ -2,6 +2,9 @@
 # 项目运行时数据（登录态/代码/对话记录），绝对不能进 git
 airacle/projects/*/
 !airacle/projects/.gitkeep
+projects/*/
+!projects/.gitkeep
+appliances/
 
 # 环境变量（含 API Key）
 **/.env

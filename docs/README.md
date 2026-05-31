@@ -12,7 +12,8 @@
 ### 🧠 想理解架构
 1. [01-architecture.md](./01-architecture.md) — 整体架构、设计原则
 2. [02-what-persists.md](./02-what-persists.md) — **★ 必读** 每个文件/目录在哪、什么会丢
-3. [05-decisions.md](./05-decisions.md) — 设计决策记录（为什么 X 不用 Y）
+3. [10-appliance-framework.md](./10-appliance-framework.md) — AI 员工 appliance：客户环境如何整体迁移/备份
+4. [05-decisions.md](./05-decisions.md) — 设计决策记录（为什么 X 不用 Y）
 
 ### 🔧 想维护
 1. [03-update-playbook.md](./03-update-playbook.md) — 升级镜像、加工具、回滚
@@ -32,8 +33,11 @@
 | [07-onboarding-new-machine.md](./07-onboarding-new-machine.md) | 新机器 10 分钟开通 + 批量部署思路 |
 | [08-lessons-learned.md](./08-lessons-learned.md) | 14 个踩过的坑与正解（**坑 8/9/10 = Omnara；坑 11/12 = Claude Code；坑 14 = env_file 覆盖陷阱**） |
 | [09-preinstalled-env.md](./09-preinstalled-env.md) | **镜像预装清单**：能用什么 CLI / 库、API key 怎么注入 |
+| [10-appliance-framework.md](./10-appliance-framework.md) | **AI Employee Appliance**：一个客户/员工环境如何作为一个目录创建、迁移、备份和升级 |
 
 ## 一句话总结
 
 > 一个 `airacle-dev` 镜像（共享所有工具），N 个项目容器（隔离所有状态），
 > 工具更新只需重建镜像 + 重启容器，**登录态/对话记录永不丢失**。
+>
+> 对客户交付时，一个 appliance 目录就是一个可迁移的 AI 员工运行包。

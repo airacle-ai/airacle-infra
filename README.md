@@ -25,16 +25,20 @@ airacle-infra/
 ├── entrypoint.sh                   ← 容器启动脚本（Omnara daemon + watchdog）
 ├── docker-compose.yml              ← 项目容器编排
 ├── add-project.sh                  ← 一键加项目脚本
+├── templates/                      ← 可迁移 AI employee appliance 模板
+│   └── marketing-employee/         ← 营销员工模板（OpenClaw/worker/DinD profiles）
+├── scripts/                        ← appliance 创建/启动/备份/升级脚本
 ├── .env.example                    ← Key 模板
 ├── docs/                           ← 维护文档（必读）
-│   ├── 01-architecture.md              整体架构
-    │   ├── 02-what-persists.md     ★ 什么会丢/什么不会
-    │   ├── 03-update-playbook.md       升级/加工具操作手册
-    │   ├── 04-troubleshooting.md       故障排查
-    │   └── 05-decisions.md             设计决策记录
-    ├── shared/
-    │   └── claude-settings/        ← 团队共享配置（CLAUDE.md 等）
-    └── projects/                   ← 运行时项目目录（数据不入 git）
+│   ├── 01-architecture.md          ← 整体架构
+│   ├── 02-what-persists.md         ← ★ 什么会丢/什么不会
+│   ├── 03-update-playbook.md       ← 升级/加工具操作手册
+│   ├── 04-troubleshooting.md       ← 故障排查
+│   ├── 05-decisions.md             ← 设计决策记录
+│   └── 10-appliance-framework.md   ← AI 员工 appliance 框架
+├── shared/
+│   └── claude-settings/            ← 团队共享配置（CLAUDE.md 等）
+└── projects/                       ← 运行时项目目录（数据不入 git）
 ```
 
 ---
@@ -101,6 +105,36 @@ docker-compose up -d tom
 - 自己的 Omnara session
 - 自己的 workspace 代码
 - **共享同一个镜像层**，磁盘上不重复
+
+---
+
+## 🧳 AI Employee Appliance（客户交付形态）
+
+项目容器适合内部开发沙箱；客户交付时推荐用 appliance：一个客户/公司/岗位一个完整目录。
+
+```bash
+./scripts/create-appliance.sh marketing-employee acme-marketing
+$EDITOR /srv/airacle/appliances/acme-marketing/appliance.env
+./scripts/start-appliance.sh acme-marketing
+```
+
+appliance 运行时目录默认在 `/srv/airacle/appliances/<name>/`：
+
+```
+compose.yml
+appliance.env
+config/       # prompts / SOP / customer profile
+data/         # OpenClaw/OpenCloud/DB/exports/cache
+identity/     # Claude / Codex / Omnara / gh login state
+workspace/    # inbox / brand assets / projects / deliverables
+```
+
+这套形态用于把一个定制 AI 员工整体迁移、备份、复制给客户。Docker-in-Docker 预留为显式 profile：
+
+```bash
+cd /srv/airacle/appliances/acme-marketing
+docker compose --profile dind up -d
+```
 
 ---
 
