@@ -1,0 +1,107 @@
+name: ${AIRACLE_APPLIANCE_NAME:-marketing-employee}
+
+x-airacle-agent-base: &airacle-agent-base
+  image: ${AIRACLE_AGENT_IMAGE:-airacle-dev:latest}
+  restart: unless-stopped
+  stdin_open: true
+  tty: true
+  env_file:
+    - ./appliance.env
+  environment:
+    IS_SANDBOX: "1"
+    LANG: en_US.UTF-8
+    TZ: ${TZ:-America/Los_Angeles}
+  volumes:
+    - ./workspace:/workspace
+    - ./config:/airacle/config:ro
+    - ./data/exports:/exports
+    - ./identity/claude:/root/.claude
+    - ./identity/claude.json:/root/.claude.json
+    - ./identity/codex:/root/.codex
+    - ./identity/omnara:/root/.omnara
+    - ./identity/gh:/root/.config/gh
+
+services:
+  agent:
+    <<: *airacle-agent-base
+    hostname: ${AIRACLE_APPLIANCE_NAME:-marketing-employee}-agent
+    command: ["/bin/bash"]
+    depends_on:
+      - redis
+
+  codex-worker:
+    <<: *airacle-agent-base
+    hostname: ${AIRACLE_APPLIANCE_NAME:-marketing-employee}-codex
+    profiles: ["workers"]
+    command: ["/bin/bash", "-lc", "sleep infinity"]
+    depends_on:
+      - redis
+
+  video-worker:
+    <<: *airacle-agent-base
+    hostname: ${AIRACLE_APPLIANCE_NAME:-marketing-employee}-video
+    profiles: ["workers"]
+    command: ["/bin/bash", "-lc", "sleep infinity"]
+    volumes:
+      - ./workspace:/workspace
+      - ./config:/airacle/config:ro
+      - ./data/exports:/exports
+      - ./data/video-cache:/var/cache/airacle-video
+      - ./identity/claude:/root/.claude
+      - ./identity/claude.json:/root/.claude.json
+      - ./identity/codex:/root/.codex
+      - ./identity/omnara:/root/.omnara
+      - ./identity/gh:/root/.config/gh
+    depends_on:
+      - redis
+
+  openclaw:
+    image: ${AIRACLE_OPENCLAW_IMAGE:-airacle-dev:latest}
+    restart: unless-stopped
+    profiles: ["openclaw"]
+    env_file:
+      - ./appliance.env
+    environment:
+      TZ: ${TZ:-America/Los_Angeles}
+    ports:
+      - "${OPENCLAW_PORT:-18890}:18890"
+    volumes:
+      - ./workspace:/workspace
+      - ./config:/airacle/config:ro
+      - ./data/openclaw:/data
+      - ./identity/omnara:/root/.omnara
+    command: ["/bin/bash", "-lc", "openclaw gateway --port 18890"]
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - ./data/redis:/data
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_DB: airacle
+      POSTGRES_USER: airacle
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-local-only}
+      TZ: ${TZ:-America/Los_Angeles}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+  dind:
+    image: docker:27-dind
+    restart: unless-stopped
+    privileged: true
+    profiles: ["dind"]
+    environment:
+      DOCKER_TLS_CERTDIR: ""
+    volumes:
+      - ./data/dind:/var/lib/docker
+
+networks:
+  default:
+    name: ${AIRACLE_APPLIANCE_NAME:-marketing-employee}
